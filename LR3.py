@@ -1,3 +1,6 @@
+import json
+
+rules_json = """
 [
     {
         "name": "Top merit candidate",
@@ -62,3 +65,51 @@
         }
     }
 ]
+"""
+
+rules = json.loads(rules_json)
+
+def evaluate_rules(applicant):
+    matched_rules = []
+
+    for rule in rules:
+        conditions_met = True
+
+        for condition in rule["conditions"]:
+            field, operator, value = condition
+            applicant_value = applicant.get(field)
+
+            if operator == ">=":
+                if not (applicant_value >= value):
+                    conditions_met = False
+            elif operator == "<=":
+                if not (applicant_value <= value):
+                    conditions_met = False
+            elif operator == "==":
+                if not (applicant_value == value):
+                    conditions_met = False
+            elif operator == "<":
+                if not (applicant_value < value):
+                    conditions_met = False
+            elif operator == ">":
+                if not (applicant_value > value):
+                    conditions_met = False
+
+        if conditions_met:
+            matched_rules.append(rule)
+
+    # No rules matched
+    if not matched_rules:
+        return {
+            "decision": "NO_DECISION",
+            "reason": "No matching rule found for this applicant."
+        }
+
+    # Select rule with highest priority
+    best_rule = sorted(matched_rules, key=lambda r: r["priority"], reverse=True)[0]
+
+    return {
+        "rule_name": best_rule["name"],
+        "decision": best_rule["action"]["decision"],
+        "reason": best_rule["action"]["reason"]
+    }
