@@ -1,4 +1,5 @@
 import json
+import streamlit as st
 
 rules_json = """
 [
@@ -77,35 +78,25 @@ def evaluate_rules(applicant):
 
         for condition in rule["conditions"]:
             field, operator, value = condition
-            applicant_value = applicant.get(field)
+            applicant_value = applicant[field]
 
             if operator == ">=":
-                if not (applicant_value >= value):
-                    conditions_met = False
+                if not (applicant_value >= value): conditions_met = False
             elif operator == "<=":
-                if not (applicant_value <= value):
-                    conditions_met = False
+                if not (applicant_value <= value): conditions_met = False
             elif operator == "==":
-                if not (applicant_value == value):
-                    conditions_met = False
+                if not (applicant_value == value): conditions_met = False
             elif operator == "<":
-                if not (applicant_value < value):
-                    conditions_met = False
+                if not (applicant_value < value): conditions_met = False
             elif operator == ">":
-                if not (applicant_value > value):
-                    conditions_met = False
+                if not (applicant_value > value): conditions_met = False
 
         if conditions_met:
             matched_rules.append(rule)
 
-    # No rules matched
     if not matched_rules:
-        return {
-            "decision": "NO_DECISION",
-            "reason": "No matching rule found for this applicant."
-        }
+        return {"decision": "NO_DECISION", "reason": "No matching rule found."}
 
-    # Select rule with highest priority
     best_rule = sorted(matched_rules, key=lambda r: r["priority"], reverse=True)[0]
 
     return {
@@ -113,3 +104,25 @@ def evaluate_rules(applicant):
         "decision": best_rule["action"]["decision"],
         "reason": best_rule["action"]["reason"]
     }
+
+st.title("🎓 Scholarship Advisory Rule-Based System")
+
+cgpa = st.number_input("CGPA", min_value=0.0, max_value=4.0, step=0.01)
+co = st.number_input("Co-curricular Score", min_value=0, max_value=100)
+income = st.number_input("Family Income (RM)")
+discipline = st.number_input("Number of Disciplinary Actions", min_value=0, max_value=10)
+
+if st.button("Evaluate Scholarship"):
+    applicant = {
+        "cgpa": cgpa,
+        "co_curricular_score": co,
+        "family_income": income,
+        "disciplinary_actions": discipline
+    }
+
+    result = evaluate_rules(applicant)
+
+    st.subheader("Result")
+    st.write("📌 **Decision:**", result["decision"])
+    st.write("📝 **Reason:**", result["reason"])
+
